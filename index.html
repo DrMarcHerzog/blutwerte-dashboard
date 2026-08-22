@@ -504,6 +504,30 @@ function inSandboxedPreview(){
   }
 }
 
+async function fetchAllRows(url, opts){
+  // Supabase/PostgREST caps responses at a server-side max-rows setting (often 1000)
+  // regardless of the ?limit= query param, so page through with Range headers
+  // until a page comes back short of the page size.
+  const pageSize = 1000;
+  let all = [];
+  let offset = 0;
+  while(true){
+    const pageOpts = {
+      ...opts,
+      headers: {
+        ...(opts.headers||{}),
+        'Range-Unit': 'items',
+        'Range': `${offset}-${offset+pageSize-1}`
+      }
+    };
+    const page = await fetchWithRetry(url, pageOpts);
+    all = all.concat(page);
+    if(page.length < pageSize) break;
+    offset += pageSize;
+  }
+  return all;
+}
+
 async function loadData(forceLive){
   if(inSandboxedPreview() && !forceLive){
     loadEmbedded('Diese Ansicht läuft in einer eingebetteten Vorschau ohne Internetzugriff (z. B. Claude-Artefakt-Vorschau); Live-Daten sind hier grundsätzlich nicht erreichbar.');
@@ -526,8 +550,8 @@ async function loadData(forceLive){
     });
 
     setStatus('loading', 'Lade Messwerte…');
-    const measurements = await fetchWithRetry(
-      `${SUPABASE_URL}/rest/v1/measurements?select=value,unit,ref_min,ref_max,measured_at,note,marker_id&order=measured_at.asc&limit=5000`,
+    const measurements = await fetchAllRows(
+      `${SUPABASE_URL}/rest/v1/measurements?select=value,unit,ref_min,ref_max,measured_at,note,marker_id&order=measured_at.asc`,
       { headers: headers() }
     );
 
