@@ -96,6 +96,70 @@
   .wichtig-footnote{margin-top:16px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.12); font-size:12.5px; color:#B7C2C6; display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px;}
   .wichtig-footnote b{color:var(--wichtig-ink); font-weight:600;}
 
+  /* INBOX / UPLOAD */
+  #inbox-section{
+    background:var(--paper); border:1px solid var(--line); border-radius:14px;
+    padding:20px 22px; margin:0 0 26px; box-shadow:var(--shadow);
+  }
+  #inbox-section > summary{
+    font-family:'IBM Plex Serif',serif; font-size:17px; font-weight:600;
+    cursor:pointer; list-style:none; display:flex; align-items:center; gap:8px;
+  }
+  #inbox-section > summary::-webkit-details-marker{display:none;}
+  #inbox-section > summary::after{content:'▾'; margin-left:auto; color:var(--ink-soft); font-size:13px;}
+  #inbox-section[open] > summary::after{content:'▴';}
+  #inbox-section .inbox-lead{color:var(--ink-soft); font-size:13px; margin:8px 0 16px; max-width:70ch;}
+  .dropzone{
+    border:2px dashed var(--line); border-radius:12px; padding:28px 16px;
+    text-align:center; color:var(--ink-soft); font-size:13.5px; cursor:pointer;
+    transition:all .15s ease; background:var(--bg);
+  }
+  .dropzone.drag-over{border-color:var(--accent); background:var(--accent-soft); color:var(--accent);}
+  .dropzone .dz-icon{font-size:28px; margin-bottom:8px; display:block;}
+  .dropzone .dz-main{font-weight:600; color:var(--ink); margin-bottom:2px;}
+  .dropzone input[type=file]{display:none;}
+  #inbox-filelist{margin-top:10px; display:flex; flex-direction:column; gap:6px;}
+  .inbox-file-chip{
+    display:flex; align-items:center; gap:8px; background:var(--accent-soft);
+    color:var(--accent); border-radius:8px; padding:6px 10px; font-size:12.5px;
+  }
+  .inbox-file-chip button{
+    margin-left:auto; border:none; background:none; color:var(--accent);
+    font-weight:700; cursor:pointer; font-size:14px; padding:0 4px;
+  }
+  #inbox-text{
+    width:100%; margin-top:14px; border:1px solid var(--line); border-radius:8px;
+    padding:10px 12px; font-family:inherit; font-size:13.5px; resize:vertical;
+    min-height:70px; background:var(--paper); color:var(--ink);
+  }
+  #inbox-note-label{font-size:12px; color:var(--ink-soft); margin-top:14px; display:block;}
+  #inbox-submit{
+    margin-top:14px; background:var(--accent); color:#fff; border:none;
+    padding:10px 20px; border-radius:999px; font-weight:600; font-size:13.5px;
+    cursor:pointer;
+  }
+  #inbox-submit:disabled{background:#C7CFCB; cursor:not-allowed;}
+  #inbox-feedback{margin-top:12px; font-size:13px; padding:10px 12px; border-radius:8px; display:none;}
+  #inbox-feedback.ok{display:block; background:var(--good-bg); color:var(--good);}
+  #inbox-feedback.err{display:block; background:var(--bad-bg); color:var(--bad);}
+  #inbox-pending{margin-top:18px; padding-top:16px; border-top:1px dashed var(--line);}
+  #inbox-pending h3{font-size:12.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); margin:0 0 10px;}
+  .inbox-pending-row{
+    display:flex; align-items:center; gap:10px; padding:8px 0;
+    border-bottom:1px solid var(--line); font-size:13px;
+  }
+  .inbox-pending-row:last-child{border-bottom:none;}
+  .inbox-pending-row .ip-icon{font-size:16px;}
+  .inbox-pending-row .ip-name{font-weight:600; flex:1 1 auto; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .inbox-pending-row .ip-date{color:var(--ink-soft); font-size:11.5px; font-family:'IBM Plex Mono',monospace; flex:0 0 auto;}
+  .inbox-pending-row .ip-status{
+    flex:0 0 auto; font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:999px;
+    text-transform:uppercase; letter-spacing:.03em;
+  }
+  .ip-status.pending{background:var(--warn-bg); color:var(--warn);}
+  .ip-status.reviewed{background:var(--good-bg); color:var(--good);}
+  .ip-status.rejected{background:var(--bad-bg); color:var(--bad);}
+
   /* TABS */
   nav#tabs{
     display:flex; gap:6px; overflow-x:auto; padding:4px 0 14px;
@@ -218,6 +282,31 @@
       <div><b>Bezug zu Paraprotein-Monitoring:</b> Kappa/Lambda-Ratio, IgG, M-Gradient und ß-2-Mikroglobulin unten in der jeweiligen Kategorie im Verlauf einsehbar.</div>
     </div>
   </section>
+
+  <details id="inbox-section">
+    <summary>📥 Neue Werte einreichen</summary>
+    <p class="inbox-lead">Laborbefund (PDF, Word, Foto) hier hochladen oder Werte als Text eintippen. Nichts wird automatisch übernommen — jede Einreichung wird erst geprüft (Referenzbereiche, Plausibilität, Rückfrage bei Unklarheiten) und danach von Hand in die Historie aufgenommen.</p>
+
+    <div class="dropzone" id="dropzone" tabindex="0">
+      <span class="dz-icon">📄</span>
+      <span class="dz-main">Datei hierher ziehen oder antippen</span>
+      <span>PDF, Word (.doc/.docx), Foto (JPG/PNG/HEIC) · max. 8 MB</span>
+      <input type="file" id="inbox-file-input" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.heic,.heif" multiple>
+    </div>
+    <div id="inbox-filelist"></div>
+
+    <label id="inbox-note-label" for="inbox-text">Optional: Werte direkt eintippen oder eine Notiz zu den Dateien hinzufügen</label>
+    <textarea id="inbox-text" placeholder="z. B. IgG 2650 mg/dl, Hämoglobin 15.1 g/dl, Messdatum 15.09.2026 ..."></textarea>
+
+    <br>
+    <button id="inbox-submit" disabled>Einreichen</button>
+    <div id="inbox-feedback"></div>
+
+    <div id="inbox-pending">
+      <h3>Noch nicht geprüfte Einreichungen</h3>
+      <div id="inbox-pending-list"><span style="color:var(--ink-soft); font-size:12.5px;">Lade…</span></div>
+    </div>
+  </details>
 
   <nav id="tabs"></nav>
   <div id="categories"></div>
@@ -586,6 +675,196 @@ async function loadData(forceLive){
 }
 
 loadData();
+
+// ===== Inbox / Upload =====
+const MAX_FILE_BYTES = 8 * 1024 * 1024; // 8 MB raw per file
+let inboxFiles = []; // {file, base64}
+
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('inbox-file-input');
+const fileListEl = document.getElementById('inbox-filelist');
+const textEl = document.getElementById('inbox-text');
+const submitBtn = document.getElementById('inbox-submit');
+const feedbackEl = document.getElementById('inbox-feedback');
+
+function fileIcon(mime){
+  if(mime && mime.includes('pdf')) return '📄';
+  if(mime && mime.includes('word')) return '📝';
+  if(mime && mime.startsWith('image/')) return '🖼️';
+  return '📎';
+}
+
+function renderFileList(){
+  fileListEl.innerHTML = inboxFiles.map((f, i) => `
+    <div class="inbox-file-chip">
+      <span>${fileIcon(f.file.type)}</span>
+      <span>${f.file.name} (${(f.file.size/1024/1024).toFixed(1)} MB)</span>
+      <button type="button" data-idx="${i}" aria-label="Entfernen">✕</button>
+    </div>
+  `).join('');
+  fileListEl.querySelectorAll('button[data-idx]').forEach(btn => {
+    btn.onclick = () => {
+      inboxFiles.splice(parseInt(btn.dataset.idx), 1);
+      renderFileList();
+      updateSubmitState();
+    };
+  });
+}
+
+function updateSubmitState(){
+  submitBtn.disabled = inboxFiles.length === 0 && textEl.value.trim() === '';
+}
+
+function readFileAsBase64(file){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result; // data:<mime>;base64,<data>
+      const base64 = result.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function handleFiles(fileListObj){
+  const files = Array.from(fileListObj);
+  for(const file of files){
+    if(file.size > MAX_FILE_BYTES){
+      showFeedback('err', `„${file.name}“ ist mit ${(file.size/1024/1024).toFixed(1)} MB zu groß (Limit 8 MB). Bitte stattdessen direkt im Chat hochladen.`);
+      continue;
+    }
+    inboxFiles.push({file});
+  }
+  renderFileList();
+  updateSubmitState();
+}
+
+dropzone.addEventListener('click', () => fileInput.click());
+dropzone.addEventListener('keydown', (e) => { if(e.key==='Enter' || e.key===' ') fileInput.click(); });
+fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+['dragenter','dragover'].forEach(evt => {
+  dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+});
+['dragleave','drop'].forEach(evt => {
+  dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.remove('drag-over'); });
+});
+dropzone.addEventListener('drop', (e) => {
+  if(e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
+});
+textEl.addEventListener('input', updateSubmitState);
+
+function showFeedback(kind, msg){
+  feedbackEl.className = kind;
+  feedbackEl.textContent = msg;
+}
+
+async function postInbox(row){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/inbox`, {
+    method: 'POST',
+    headers: {
+      ...headers(),
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify(row)
+  });
+  if(!res.ok){
+    const text = await res.text().catch(()=> '');
+    throw new Error('HTTP '+res.status+' '+text);
+  }
+}
+
+submitBtn.addEventListener('click', async () => {
+  submitBtn.disabled = true;
+  showFeedback('ok', 'Wird eingereicht…');
+  try{
+    const note = textEl.value.trim();
+    let submittedSomething = false;
+
+    for(const f of inboxFiles){
+      const base64 = await readFileAsBase64(f.file);
+      await postInbox({
+        kind: 'file',
+        filename: f.file.name,
+        mime_type: f.file.type || null,
+        size_bytes: f.file.size,
+        content_base64: base64,
+        user_note: note || null
+      });
+      submittedSomething = true;
+    }
+
+    if(note && inboxFiles.length === 0){
+      await postInbox({
+        kind: 'text',
+        text_content: note
+      });
+      submittedSomething = true;
+    }
+
+    if(!submittedSomething){
+      throw new Error('Nichts zum Einreichen vorhanden.');
+    }
+
+    showFeedback('ok', '✓ Erfolgreich eingereicht. Die Werte werden im nächsten Chat geprüft und danach eingetragen.');
+    inboxFiles = [];
+    renderFileList();
+    textEl.value = '';
+    updateSubmitState();
+    loadInboxPending();
+  }catch(err){
+    console.error(err);
+    showFeedback('err', 'Fehler beim Einreichen — bitte Internetverbindung prüfen und erneut versuchen, oder stattdessen direkt im Chat hochladen.');
+    submitBtn.disabled = false;
+  }
+});
+
+function fmtDateTime(iso){
+  const dt = new Date(iso);
+  return dt.toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'}) + ' ' +
+         dt.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'});
+}
+
+async function loadInboxPending(){
+  const listEl = document.getElementById('inbox-pending-list');
+  try{
+    const rows = await fetchWithRetry(
+      `${SUPABASE_URL}/rest/v1/inbox?select=id,created_at,kind,filename,mime_type,text_content,status&order=created_at.desc&limit=50`,
+      { headers: headers() },
+      2
+    );
+    if(rows.length === 0){
+      listEl.innerHTML = '<span style="color:var(--ink-soft); font-size:12.5px;">Keine Einreichungen vorhanden.</span>';
+      return;
+    }
+    listEl.innerHTML = rows.map(r => {
+      const icon = r.kind === 'text' ? '✏️' : fileIcon(r.mime_type);
+      const label = r.kind === 'text'
+        ? (r.text_content.length > 40 ? r.text_content.slice(0,40)+'…' : r.text_content)
+        : r.filename;
+      const statusLabel = {pending:'Ausstehend', reviewed:'Übernommen', rejected:'Abgelehnt'}[r.status] || r.status;
+      return `<div class="inbox-pending-row">
+        <span class="ip-icon">${icon}</span>
+        <span class="ip-name">${label}</span>
+        <span class="ip-date">${fmtDateTime(r.created_at)}</span>
+        <span class="ip-status ${r.status}">${statusLabel}</span>
+      </div>`;
+    }).join('');
+  }catch(err){
+    console.error(err);
+    listEl.innerHTML = '<span style="color:var(--ink-soft); font-size:12.5px;">Konnte Liste nicht laden (keine Live-Verbindung).</span>';
+  }
+}
+
+if(!inSandboxedPreview()){
+  loadInboxPending();
+} else {
+  document.getElementById('inbox-pending-list').innerHTML =
+    '<span style="color:var(--ink-soft); font-size:12.5px;">Nur mit Live-Verbindung verfügbar (nicht in der Vorschau).</span>';
+}
 </script>
 </body>
 </html>
