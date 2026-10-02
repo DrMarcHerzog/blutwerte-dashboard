@@ -268,8 +268,8 @@
       </div>
       <div class="wichtig-card">
         <div class="label">Letzte Bildgebung</div>
-        <div class="value" style="font-size:16px;">Ganzkörper-CT (low-dose)</div>
-        <div class="threshold">09/2026 — unauffällig (o.B.)</div>
+        <div class="value" id="w-imaging-modality" style="font-size:16px;">–</div>
+        <div class="threshold" id="w-imaging-result">–</div>
         <div class="threshold" style="margin-top:4px;">Nächste Verlaufskontrolle: November 2026</div>
       </div>
       <div class="wichtig-card">
@@ -870,11 +870,39 @@ async function loadInboxPending(){
   }
 }
 
+async function loadImaging(){
+  const modEl = document.getElementById('w-imaging-modality');
+  const resEl = document.getElementById('w-imaging-result');
+  try{
+    const rows = await fetchWithRetry(
+      `${SUPABASE_URL}/rest/v1/imaging_studies?select=study_date,modality,result_short&order=study_date.desc&limit=1`,
+      { headers: headers() },
+      2
+    );
+    if(rows.length === 0){
+      modEl.textContent = 'Keine Bildgebung erfasst';
+      resEl.textContent = '';
+      return;
+    }
+    const r = rows[0];
+    const shortModality = r.modality.split('(')[0].trim(); // e.g. "Ganzkörper-CT"
+    modEl.textContent = shortModality;
+    resEl.textContent = fmtDate(r.study_date) + ' — ' + (r.result_short || '');
+  }catch(err){
+    console.error(err);
+    modEl.textContent = 'Nicht verfügbar';
+    resEl.textContent = 'keine Live-Verbindung';
+  }
+}
+
 if(!inSandboxedPreview()){
   loadInboxPending();
+  loadImaging();
 } else {
   document.getElementById('inbox-pending-list').innerHTML =
     '<span style="color:var(--ink-soft); font-size:12.5px;">Nur mit Live-Verbindung verfügbar (nicht in der Vorschau).</span>';
+  document.getElementById('w-imaging-modality').textContent = 'Nicht verfügbar';
+  document.getElementById('w-imaging-result').textContent = 'keine Live-Verbindung (Vorschau)';
 }
 </script>
 </body>
