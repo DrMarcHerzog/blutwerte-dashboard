@@ -267,9 +267,10 @@
         <div class="wichtig-bar"><div class="wichtig-bar-fill" id="w-hb-bar" style="width:0%"></div></div>
       </div>
       <div class="wichtig-card">
-        <div class="label">Nächste Bildgebung</div>
+        <div class="label">Letzte Bildgebung</div>
         <div class="value" style="font-size:16px;">Ganzkörper-CT (low-dose)</div>
-        <div class="threshold">Geplant: November</div>
+        <div class="threshold">09/2026 — unauffällig (o.B.)</div>
+        <div class="threshold" style="margin-top:4px;">Nächste Verlaufskontrolle: November 2026</div>
       </div>
       <div class="wichtig-card">
         <div class="label">Impfungen (Saison)</div>
@@ -392,6 +393,13 @@ function statusFor(value, ref_min, ref_max){
   if(lo!==null && value < lo) return (value < lo*0.85) ? 'bad' : 'warn';
   if(hi!==null && value > hi) return (value > hi*1.15) ? 'bad' : 'warn';
   return 'good';
+}
+
+function latestDateLabel(dateStrings){
+  const valid = (dateStrings||[]).filter(d => !!d);
+  if(valid.length === 0) return '';
+  const max = valid.reduce((a,b) => (b > a ? b : a));
+  return fmtDate(max);
 }
 
 function fmtDate(d){
@@ -573,8 +581,10 @@ function loadEmbedded(reason){
     });
   });
   render();
+  const latestEmbedded = latestDateLabel(EMBEDDED_MEASUREMENTS.map(r => r.d));
   setStatus('offline',
     'Offline-Daten (Stand ' + EMBEDDED_AT + ') · ' + EMBEDDED_MEASUREMENTS.length + ' Messwerte' +
+    (latestEmbedded ? ' · letzte Werte vom ' + latestEmbedded : '') +
     ' <button id="retry-live">Live-Verbindung erneut versuchen</button>'
   );
   document.getElementById('footer-updated').textContent =
@@ -661,7 +671,8 @@ async function loadData(forceLive){
 
     BY_MARKER = liveByMarker;
     render();
-    setStatus('ok', 'Live-Daten · ' + measurements.length + ' Messwerte');
+    const latestLive = latestDateLabel(measurements.map(r => r.measured_at));
+    setStatus('ok', 'Live-Daten · ' + measurements.length + ' Messwerte' + (latestLive ? ' · letzte Werte vom ' + latestLive : ''));
     document.getElementById('footer-updated').textContent =
       ' · Zuletzt live geladen: ' + new Date().toLocaleString('de-DE');
     keepAlive();
